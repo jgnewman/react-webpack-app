@@ -5,11 +5,20 @@ const fs = require("fs")
 const path = require("path")
 
 async function run() {
+  const projectPath = path.resolve("./")
   let promptsAborted = false
 
-  console.log(__dirname, path.resolve("./"))
+  const captureAbort = ({ aborted }) => aborted && (promptsAborted = true)
 
-  const captureAbort = ({ aborted }) => aborted && (wasAborted = true)
+  const mkdir = dir => {
+    if (!fs.existsSync(dir)){
+      fs.mkdirSync(dir)
+    }
+  }
+
+  const writeFile = (file, content) => {
+    fs.writeFileSync(file, content)
+  }
 
   const userVals = await prompts([
     {
@@ -28,32 +37,64 @@ async function run() {
     },
   ]);
 
-  console.log(userVals); // => { value: 24 }
-
-  if (wasAborted) {
+  if (promptsAborted) {
     console.log("Process aborted.")
     return
   }
 
-  let command = "npm install"
+  let baseCommand = "npm install"
   let saveFlag = "--save"
   let devFlag = "--save-dev"
 
   if (userVals.useYarn) {
-    command = "yarn add"
+    baseCommand = "yarn add"
     saveFlag = ""
     devFlag = "--dev"
   }
 
-  let stylePacks = " node-sass sass-loader "
+  let stylePacks = "node-sass sass-loader"
   let styleLoader = "sass-loader"
+  let styleExt = "scss"
 
   if (userVals.useStylus) {
-    stylePacks = " stylus stylus-loader "
+    stylePacks = "stylus stylus-loader"
     styleLoader = "stylus-loader"
+    styleExt = "styl"
   }
 
-  const webpackConfig = `
+  let packageJSON = JSON.parse(fs.readFileSync(path.resolve(projectPath, "package.json")).toString())
+  packageJSON.scripts = packageJSON.scripts || {}
+  packageJSON.scripts.start = "NODE_ENV=development webpack-dev-server --mode development --progress --open"
+  packageJSON.scripts.build = "NODE_ENV=production webpack --mode production"
+  packageJSON = JSON.stringify(packageJSON, null, 2)
+
+  let installCommand = `
+  ${baseCommand} ${devFlag}
+    webpack webpack-cli webpack-dev-server
+    ${stylePacks} css-loader import-glob-loader mini-css-extract-plugin optimize-css-assets-webpack-plugin
+    file-loader url-loader
+    copy-webpack-plugin html-webpack-plugin
+    @babel/core @babel/preset-env @babel/preset-react @babel/polyfill babel-loader
+  && ${baseCommand} ${saveFlag} react react-dom redux react-redux
+  `.trim().replace(/\n\s*/g, " ")
+
+  const directories = [
+    path.resolve(projectPath, "src"),
+    path.resolve(projectPath, "src", "assets"),
+    path.resolve(projectPath, "src", "styles"),
+    path.resolve(projectPath, "src", "containers"),
+    path.resolve(projectPath, "src", "components"),
+  ]
+
+  const files = [
+    {
+      file: path.resolve(projectPath, "package.json"),
+      content: packageJSON
+    },
+
+    {
+      file: path.resolve(projectPath, "webpack.config.js"),
+      content: `
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
@@ -96,7 +137,7 @@ const config = {
         use: { loader: "url-loader", options: {limit: 10000} }
       },
       {
-        test: /\.scss$/,
+        test: /\.${styleExt}$/,
         use: [
           { loader: MiniCssExtractPlugin.loader },
           { loader: "css-loader", options: {sourceMap: true} },
@@ -117,9 +158,12 @@ if (process.env.NODE_ENV === "production") {
 }
 
 module.exports = config
-  `.trim() + "\n"
+      `.trim() + "\n"
+    },
 
-  const html = `
+    {
+      file: path.resolve(projectPath, "src", "index.ejs"),
+      content: `
 <% const vars = htmlWebpackPlugin.options.vars %>
 <% const isDev = process.env.NODE_ENV === "development" %>
 <!doctype html>
@@ -137,8 +181,46 @@ module.exports = config
   <div id="app"></div>
 </body>
 </html>
-  `.trim() + "\n"
+      `.trim() + "\n"
+    },
+
+    {
+      file: path.resolve(projectPath, "src", "styles", `styles.${styleExt}`),
+      content: (userVals.useStylus ? `
+body
+  background: black
+  color: white
+  text-align: center
+      ` : `
+body {
+  background: black;
+  color: white;
+  text-align: center;
+}
+      `).trim() + "\n"
+    },
+
+    {
+      file: path.resolve(projectPath, "src", "index.js"),
+      content: `
+import "./styles/styles.${styleExt}"
+import React from "react"
+import ReactDOM from "react-dom"
+import AppContainer from "./containers/AppContainer"
+
+ReactDOM.render(
+  <div className="my-app">
+    <h1>My app is running!</h1>
+  </div>
+, document.querySelector("#app"))
+      `.trim() + "\n"
+    }
+  ]
+
+  directories.forEach(pathStr => mkdir(pathStr))
+  files.forEach(obj => writeFile(obj.file, obj.content))
 
 }
+
 
 run()
