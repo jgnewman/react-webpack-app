@@ -222,18 +222,20 @@ ReactDOM.render(
     console.log("\nBuilding directory structure...")
     directories.forEach(pathStr => {
       console.log(`- ${pathStr}`)
-      //mkdir(pathStr)
+      mkdir(pathStr)
     })
 
     console.log("\nWriting files...")
     files.forEach(obj => {
       console.log(`- ${obj.file}`)
-      //writeFile(obj.file, obj.content)
+      writeFile(obj.file, obj.content)
     })
 
     console.log("\nInstalling packages...")
     const proc = child_process.exec(installCommand, (err, stdout, stderr) => {
-      stdout.on('data', data => console.log(data))
+      err && console.log(err)
+      stdout && console.log(stdout)
+      stderr && console.log(stderr)
     })
     proc.on("close", () => console.log("Done."))
   }
