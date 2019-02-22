@@ -11,6 +11,9 @@
   "bin": {
     "webpack-cli": "./bin/index.js"
   },
+  "files": [
+    "bin"
+  ],
   "main": "./bin/index.js",
   "dependencies": {
     "prompts": "^2.0.3"
