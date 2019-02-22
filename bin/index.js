@@ -3,6 +3,7 @@
 const prompts = require("prompts")
 const fs = require("fs")
 const path = require("path")
+const child_process = require("child_process")
 
 async function run() {
   const projectPath = path.resolve("./")
@@ -217,9 +218,27 @@ ReactDOM.render(
     }
   ]
 
-  directories.forEach(pathStr => mkdir(pathStr))
-  files.forEach(obj => writeFile(obj.file, obj.content))
+  function buildIt() {
+    console.log("\nBuilding directory structure...")
+    directories.forEach(pathStr => {
+      console.log(`- ${pathStr}`)
+      //mkdir(pathStr)
+    })
 
+    console.log("\nWriting files...")
+    files.forEach(obj => {
+      console.log(`- ${obj.file}`)
+      //writeFile(obj.file, obj.content)
+    })
+
+    console.log("\nInstalling packages...")
+    const proc = child_process.exec(installCommand, (err, stdout, stderr) => {
+      stdout.on('data', data => console.log(data))
+    })
+    proc.on("close", () => console.log("Done."))
+  }
+
+  buildIt()
 }
 
 
