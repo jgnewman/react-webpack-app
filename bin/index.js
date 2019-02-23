@@ -95,126 +95,22 @@ async function run() {
 
     {
       file: path.resolve(projectPath, "webpack.config.js"),
-      content: `
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const MiniCssExtractPlugin = require("mini-css-extract-plugin")
-const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
-
-const config = {
-  entry: "./src/index.js",
-
-  output: {
-    filename: "./bundle.js"
-  },
-
-  resolve: {
-    extensions: ['.js', '.jsx']
-  },
-
-  devServer: {
-    historyApiFallback: true
-  },
-
-  plugins: [
-    new CopyWebpackPlugin([{ from: "./src/assets", to: "assets" }]),
-    new MiniCssExtractPlugin({ filename: "styles.css" }),
-    new HtmlWebpackPlugin({
-      template: "./src/index.ejs",
-      filename: "./index.html",
-      vars: {}
-    })
-  ],
-
-  module: {
-    rules: [
-      {
-        test: /\.jsx?$/,
-        exclude: /node_modules/,
-        use: { loader: "babel-loader" }
-      },
-      {
-        test: /\.(png|jpe?g|gif|svg)$/i,
-        use: { loader: "url-loader", options: {limit: 10000} }
-      },
-      {
-        test: /\.${styleExt}$/,
-        use: [
-          { loader: MiniCssExtractPlugin.loader },
-          { loader: "css-loader", options: {sourceMap: true} },
-          { loader: "${styleLoader}", },
-          { loader: "import-glob-loader" }
-        ]
-      }
-    ]
-  }
-}
-
-if (process.env.NODE_ENV === "development") {
-  config.devtool = "source-map"
-}
-
-if (process.env.NODE_ENV === "production") {
-  config.plugins.push(new OptimizeCssAssetsPlugin())
-}
-
-module.exports = config
-      `.trim() + "\n"
+      content: fs.readFileSync(path.resolve(__dirname, "./templates", "webpack.config.js")).toString()
     },
 
     {
       file: path.resolve(projectPath, "src", "index.ejs"),
-      content: `
-<% const vars = htmlWebpackPlugin.options.vars %>
-<% const isDev = process.env.NODE_ENV === "development" %>
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/ >
-  <title>My React App</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css" rel="stylesheet" />
-  <% if (!isDev) { %>
-    <link type="text/css" rel="stylesheet" href="./styles.css" />
-  <% } %>
-</head>
-<body>
-  <div id="app"></div>
-</body>
-</html>
-      `.trim() + "\n"
+      content: fs.readFileSync(path.resolve(__dirname, "./templates", "index.ejs")).toString()
     },
 
     {
       file: path.resolve(projectPath, "src", "styles", `styles.${styleExt}`),
-      content: (userVals.useStylus ? `
-body
-  background: black
-  color: white
-  text-align: center
-      ` : `
-body {
-  background: black;
-  color: white;
-  text-align: center;
-}
-      `).trim() + "\n"
+      content: fs.readFileSync(path.resolve(__dirname, "./templates", `styles.${styleExt}`)).toString()
     },
 
     {
       file: path.resolve(projectPath, "src", "index.js"),
-      content: `
-import "./styles/styles.${styleExt}"
-import React from "react"
-import ReactDOM from "react-dom"
-import AppContainer from "./containers/AppContainer"
-
-ReactDOM.render(
-  <div className="my-app">
-    <h1>My app is running!</h1>
-  </div>
-, document.querySelector("#app"))
-      `.trim() + "\n"
+      content: fs.readFileSync(path.resolve(__dirname, "./templates", "index.js")).toString()
     }
   ]
 
