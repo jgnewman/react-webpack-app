@@ -43,24 +43,38 @@ async function run() {
     return
   }
 
-  let baseCommand = "npm install"
-  let saveFlag = "--save"
-  let devFlag = "--save-dev"
+  let baseCommand
+  let saveFlag
+  let devFlag
 
   if (userVals.useYarn) {
     baseCommand = "yarn add"
     saveFlag = ""
     devFlag = "--dev"
+  } else {
+    baseCommand = "npm install"
+    saveFlag = "--save"
+    devFlag = "--save-dev"
   }
 
-  let stylePacks = "node-sass sass-loader"
-  let styleLoader = "sass-loader"
-  let styleExt = "scss"
+  let stylePacks
+  let styleLoader
+  let styleExt
 
   if (userVals.useStylus) {
     stylePacks = "stylus stylus-loader"
     styleLoader = "stylus-loader"
     styleExt = "styl"
+  } else {
+    stylePacks = "node-sass sass-loader"
+    styleLoader = "sass-loader"
+    styleExt = "scss"
+  }
+
+  const varify = (text) => {
+    text = text.replace(/\{\{styleExt\}\}/g, styleExt)
+    text = text.replace(/\{\{styleLoader\}\}/g, styleLoader)
+    return text
   }
 
   let packageJSON = JSON.parse(fs.readFileSync(path.resolve(projectPath, "package.json")).toString())
@@ -100,22 +114,22 @@ async function run() {
 
     {
       file: path.resolve(projectPath, "webpack.config.js"),
-      content: fs.readFileSync(path.resolve(__dirname, "./templates", "webpack.config.js")).toString()
+      content: varify(fs.readFileSync(path.resolve(__dirname, "./templates", "webpack.config.js")).toString())
     },
 
     {
       file: path.resolve(projectPath, "src", "index.ejs"),
-      content: fs.readFileSync(path.resolve(__dirname, "./templates", "index.ejs")).toString()
+      content: varify(fs.readFileSync(path.resolve(__dirname, "./templates", "index.ejs")).toString())
     },
 
     {
       file: path.resolve(projectPath, "src", "styles", `styles.${styleExt}`),
-      content: fs.readFileSync(path.resolve(__dirname, "./templates", `styles.${styleExt}`)).toString()
+      content: varify(fs.readFileSync(path.resolve(__dirname, "./templates", `styles.${styleExt}`)).toString())
     },
 
     {
       file: path.resolve(projectPath, "src", "index.js"),
-      content: fs.readFileSync(path.resolve(__dirname, "./templates", "index.js")).toString()
+      content: varify(fs.readFileSync(path.resolve(__dirname, "./templates", "index.js")).toString())
     }
   ]
 

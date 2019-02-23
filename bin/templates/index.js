@@ -1,4 +1,4 @@
-import "./styles/styles.scss"
+import "./styles/styles.{{styleExt}}"
 import React, { Component } from "react"
 import ReactDOM from "react-dom"
 

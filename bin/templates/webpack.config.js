@@ -28,11 +28,11 @@ const config = {
         use: { loader: "url-loader", options: {limit: 10000} }
       },
       {
-        test: /\.scss$/,
+        test: /\.{{styleExt}}$/,
         use: [
           { loader: MiniCssExtractPlugin.loader },
           { loader: "css-loader", options: {sourceMap: true} },
-          { loader: "sass-loader", },
+          { loader: "{{styleLoader}}", },
           { loader: "import-glob-loader" }
         ]
       }
