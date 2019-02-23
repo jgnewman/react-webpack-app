@@ -232,10 +232,12 @@ ReactDOM.render(
     })
 
     console.log("\nInstalling packages...")
+    const interval = setInterval(() => process.stdout.write("."), 300)
     const proc = child_process.exec(installCommand, (err, stdout, stderr) => {
       err && console.log(err)
       stdout && console.log(stdout)
       stderr && console.log(stderr)
+      clearInterval(interval)
     })
     proc.on("close", () => console.log("Done."))
   }
