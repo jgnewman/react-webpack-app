@@ -89,6 +89,11 @@ async function run() {
 
   const files = [
     {
+      file: path.resolve(projectPath, ".babelrc"),
+      content: fs.readFileSync(path.resolve(__dirname, "./templates", "babelrc.json")).toString()
+    },
+
+    {
       file: path.resolve(projectPath, "package.json"),
       content: packageJSON
     },
