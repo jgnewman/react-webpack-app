@@ -18,7 +18,7 @@ async function run() {
   }
 
   const writeFile = (file, content) => {
-    fs.writeFileSync(file, content)
+    fs.writeFileSync(file, content, "utf8")
   }
 
   const userVals = await prompts([
